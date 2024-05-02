@@ -2,7 +2,7 @@
 
 services:
   forum.api:
-    container_name: ForumApiContainer
+    container_name: forum-api-container
     depends_on:
       - postgres-db
     image: 'forumapiapp'
@@ -18,7 +18,7 @@ services:
       - forum-api-network
 
   postgres-db:
-    container_name: PostgresContainer
+    container_name: postgres-container
     hostname: 'postgres-db'
     image: 'postgres:latest'
     environment:
@@ -35,7 +35,7 @@ services:
     restart: unless-stopped
   
   forum.post.api:
-    container_name: ForumPostApiContainer
+    container_name: forum-post-api-container
     depends_on:
       - cassandra-db
     image: 'postapiapp'
@@ -48,12 +48,9 @@ services:
       ASPNETCORE_HTTP_PORTS: 24130
     networks:
       - forum-post-api-network
-    command: >
-      /bin/sh -c "dockerize -wait tcp://cassandra-db:9042 -timeout 2m &&
-                 dotnet run"
       
   cassandra-db:
-    container_name: CassandraContainer
+    container_name: cassandra-container
     image: scylladb/scylla:5.4
     ports:
       - "9042:9042"
@@ -65,15 +62,15 @@ services:
     
   kafka:
     image: confluentinc/cp-server:7.5.0
-    container_name: KafkaContainer
+    container_name: kafka-container
     ports:
       - "9092:9092"
     environment:
       KAFKA_NODE_ID: 1
       KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: 'CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT'
-      KAFKA_ADVERTISED_LISTENERS: 'PLAINTEXT://broker:29092,PLAINTEXT_HOST://localhost:9092'
+      KAFKA_ADVERTISED_LISTENERS: 'PLAINTEXT://kafka:29092,PLAINTEXT_HOST://localhost:9092'
       KAFKA_METRIC_REPORTERS: io.confluent.metrics.reporter.ConfluentMetricsReporter
-      KAFKA_CONFLUENT_METRICS_REPORTER_BOOTSTRAP_SERVERS: 'broker:9092'
+      KAFKA_CONFLUENT_METRICS_REPORTER_BOOTSTRAP_SERVERS: 'kafka:9092'
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
       KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
       KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
@@ -82,15 +79,15 @@ services:
       KAFKA_AUTO_CREATE_TOPICS_ENABLE: "true"
       KAFKA_JMX_HOSTNAME: localhost
       KAFKA_PROCESS_ROLES: 'broker,controller'
-      KAFKA_CONTROLLER_QUORUM_VOTERS: '1@broker:29093'
-      KAFKA_LISTENERS: 'PLAINTEXT://broker:29092,CONTROLLER://broker:29093,PLAINTEXT_HOST://0.0.0.0:9092'
+      KAFKA_CONTROLLER_QUORUM_VOTERS: '1@kafka:29093'
+      KAFKA_LISTENERS: 'PLAINTEXT://kafka:29092,CONTROLLER://kafka:29093,PLAINTEXT_HOST://0.0.0.0:9092'
       KAFKA_INTER_BROKER_LISTENER_NAME: 'PLAINTEXT'
       KAFKA_CONTROLLER_LISTENER_NAMES: 'CONTROLLER'
       KAFKA_LOG_DIRS: '/tmp/kraft-combined-logs'
       CLUSTER_ID: 'MkU3OEVBNTcwNTJENDM2Qk'
       
-  distributedcache:
-    container_name: distributedcache
+  distributed-cache:
+    container_name: distributed-cache-container
     image: redis
     restart: always
     ports:

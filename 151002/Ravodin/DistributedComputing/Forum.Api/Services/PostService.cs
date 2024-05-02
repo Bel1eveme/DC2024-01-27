@@ -7,6 +7,7 @@ using Forum.Api.Kafka.Messages;
 using Forum.Api.Models;
 using Forum.Api.Models.Dto;
 using Forum.Api.Repositories;
+using Microsoft.Extensions.Caching.Distributed;
 using Newtonsoft.Json;
 using ValidationException = System.ComponentModel.DataAnnotations.ValidationException;
 
@@ -14,8 +15,8 @@ namespace Forum.Api.Services;
 
 public class PostService : IPostService
 {
-    private readonly IPostRepository _postRepository;
-
+    private readonly IDistributedCache _cache;
+    
     private readonly IMapper _mapper;
 
     private readonly IValidator<PostRequestDto> _validator;
@@ -24,19 +25,26 @@ public class PostService : IPostService
 
     private readonly MessageManager<string, KafkaMessage> _messageManager;
 
-    public PostService(IPostRepository postRepository, IMapper mapper,
+    public PostService(IMapper mapper,
         IValidator<PostRequestDto> validator, IKafkaMessageBus<string, KafkaMessage> messageBus,
-        MessageManager<string, KafkaMessage> messageManager)
+        MessageManager<string, KafkaMessage> messageManager, IDistributedCache cache)
     {
-        _postRepository = postRepository;
         _mapper = mapper;
         _validator = validator;
         _messageBus = messageBus;
         _messageManager = messageManager;
+        _cache = cache;
     }
 
     public async Task<IEnumerable<PostResponseDto>> GetAllPosts()
     {
+        var cachedPosts = await _cache.GetStringAsync("posts");
+
+        if (!string.IsNullOrEmpty(cachedPosts))
+        {
+            return JsonConvert.DeserializeObject<IEnumerable<PostResponseDto>>(cachedPosts);
+        }
+        
         var requestKey = Guid.NewGuid().ToString();
         var tcs = new TaskCompletionSource<KafkaMessage>();
         _messageManager.AddRequest(requestKey, tcs);
@@ -57,18 +65,29 @@ public class PostService : IPostService
         }
         
         var posts = JsonConvert.DeserializeObject<IEnumerable<PostKafkaDto>>(kafkaMessage.Data);
-        
-        return posts.Select(p => new PostResponseDto
+
+        var result = posts.Select(p => new PostResponseDto
         {
             Id = p.Id,
             Content = p.Content,
             StoryId = p.StoryId,
             Story = null,
         });
+        
+        await _cache.SetStringAsync("posts", JsonConvert.SerializeObject(result));
+
+        return result;
     }
 
     public async Task<PostResponseDto?> GetPost(long id)
     {
+        var cachedPost = await _cache.GetStringAsync("post" + id);
+
+        if (!string.IsNullOrEmpty(cachedPost))
+        {
+            return JsonConvert.DeserializeObject<PostResponseDto>(cachedPost);
+        }
+        
         var requestKey = Guid.NewGuid().ToString();
         var tcs = new TaskCompletionSource<KafkaMessage>();
         _messageManager.AddRequest(requestKey, tcs);
@@ -93,13 +112,17 @@ public class PostService : IPostService
         
         var post = JsonConvert.DeserializeObject<PostKafkaDto>(kafkaMessage.Data);
         
-        return new PostResponseDto
+        var result = new PostResponseDto
         {
             Id = post.Id,
             Content = post.Content,
             StoryId = post.StoryId,
             Story = null,
         };
+        
+        await _cache.SetStringAsync("post" + result.Id, JsonConvert.SerializeObject(result));
+
+        return result;
     }
 
     public async Task<PostResponseDto> CreatePost(PostRequestDto postRequestDto)
@@ -143,13 +166,17 @@ public class PostService : IPostService
         
         var post = JsonConvert.DeserializeObject<PostKafkaDto>(kafkaMessage.Data);
         
-        return new PostResponseDto
+        var result = new PostResponseDto
         {
             Id = post.Id,
             Content = post.Content,
             StoryId = post.StoryId,
             Story = null,
         };
+        
+        await _cache.SetStringAsync("post" + result.Id, JsonConvert.SerializeObject(result));
+
+        return result;
     }
 
     public async Task<PostResponseDto?> UpdatePost(PostRequestDto postRequestDto)
@@ -187,17 +214,23 @@ public class PostService : IPostService
         if (kafkaMessage.ErrorOccured)
         {
             throw new KafkaException(kafkaMessage.ErrorMessage);
-        }
+        } ;
         
         var post = JsonConvert.DeserializeObject<PostKafkaDto>(kafkaMessage.Data);
+
+        await _cache.RemoveAsync("post" + post.Id);
         
-        return new PostResponseDto
+        var result = new PostResponseDto
         {
             Id = post.Id,
             Content = post.Content,
             StoryId = post.StoryId,
             Story = null,
         };
+        
+        await _cache.SetStringAsync("post" + result.Id, JsonConvert.SerializeObject(result));
+
+        return result;
     }
 
     public async Task<PostResponseDto?> DeletePost(long id)
@@ -225,6 +258,8 @@ public class PostService : IPostService
         }
         
         var post = JsonConvert.DeserializeObject<PostKafkaDto>(kafkaMessage.Data);
+
+        await _cache.RemoveAsync("post" + post.Id);
         
         return new PostResponseDto
         {

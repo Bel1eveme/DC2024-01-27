@@ -1,7 +1,6 @@
 ﻿using Forum.Api.Models;
-using Forum.Api.Repositories;
 
-namespace Forum.Api.Services;
+namespace Forum.Api.Repositories;
 
 public class CachedStoryRepository : IStoryRepository
 {

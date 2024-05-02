@@ -1,9 +1,8 @@
 ﻿using Forum.Api.Models;
-using Forum.Api.Repositories;
 using Microsoft.Extensions.Caching.Distributed;
 using Newtonsoft.Json;
 
-namespace Forum.Api.Services;
+namespace Forum.Api.Repositories;
 
 public class CachedCreatorRepository : ICreatorRepository
 {

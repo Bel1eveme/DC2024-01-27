@@ -33,7 +33,7 @@ public static class CassandraExtension
         {
             DefaultPartitionKey = defaultPartitionKey,
             Keyspace = keyspace,
-            Config =
+            Config = 
             [
                 Post.GetConfig(keyspace),
             ]
