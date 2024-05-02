@@ -1,13 +1,15 @@
 using Asp.Versioning;
+using Confluent.Kafka;
 using FluentValidation;
 using REST.Discussion.Data;
-using REST.Discussion.Exceptions.Handler;
+using REST.Discussion.Infrastructure.Kafka;
 using REST.Discussion.Models.Entities;
+using REST.Discussion.Models.Validators;
 using REST.Discussion.Repositories.Implementations;
 using REST.Discussion.Repositories.Interfaces;
 using REST.Discussion.Services.Implementations;
 using REST.Discussion.Services.Interfaces;
-using REST.Discussion.Validators;
+using REST.Discussion.Utilities.Exceptions.Handler;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -15,7 +17,12 @@ builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
 
-builder.Services.AddScoped<CassandraContext>(_ =>
+builder.Services.Configure<ProducerConfig>(builder.Configuration.GetRequiredSection("Kafka:Producer"));
+builder.Services.Configure<ConsumerConfig>(builder.Configuration.GetRequiredSection("Kafka:Consumer"));
+builder.Services.AddSingleton<MessageProcessor>();
+builder.Services.AddHostedService<ConsumerService>();
+
+builder.Services.AddSingleton<CassandraContext>(_ =>
     new CassandraContext(builder.Configuration["Cassandra:connectionString"],
         builder.Configuration["Cassandra:keyspace"]));
 
@@ -45,7 +52,7 @@ builder.Services.AddTransient<AbstractValidator<Note>, NoteValidator>();
 
 // Repository Registration
 
-builder.Services.AddScoped<INoteRepository<NoteKey>, NoteRepository>();
+builder.Services.AddTransient<INoteRepository<NoteKey>, NoteRepository>();
 
 var app = builder.Build();
 

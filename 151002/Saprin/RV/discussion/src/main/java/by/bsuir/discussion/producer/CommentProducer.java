@@ -33,7 +33,4 @@ public class CommentProducer {
         kafkaTemplate.send(TOPIC, json);
     }
 
-    public void sendMessage(String comment) {
-        kafkaTemplate.send(TOPIC, comment);
-    }
 }

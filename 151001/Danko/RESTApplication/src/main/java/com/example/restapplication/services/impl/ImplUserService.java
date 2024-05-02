@@ -1,6 +1,7 @@
 package com.example.restapplication.services.impl;
 
 import com.example.restapplication.exceptions.DuplicationException;
+import org.springframework.cache.annotation.*;
 import org.springframework.data.domain.PageRequest;
 import com.example.restapplication.dto.UserRequestTo;
 import com.example.restapplication.dto.UserResponseTo;
@@ -25,6 +26,7 @@ import java.util.Optional;
 
 @Service
 @Validated
+@CacheConfig(cacheNames = "usersCache")
 public class ImplUserService implements UserService {
 
     @Autowired
@@ -36,12 +38,14 @@ public class ImplUserService implements UserService {
     @Autowired
     UserListMapper userListMapper;
     @Override
+    @Cacheable(cacheNames = "users", key = "#id", unless = "#result == null")
     public UserResponseTo getById(Long id) throws NotFoundException {
         Optional<User> user = userDAO.findById(id);
         return user.map(value -> userMapper.toUserResponse(value)).orElseThrow(() -> new NotFoundException("User not found", 40004L));
     }
 
     @Override
+    @Cacheable(cacheNames = "users")
     public List<UserResponseTo> getAll(Integer pageNumber, Integer pageSize, String sortBy, String sortOrder) {
         Pageable pageable;
         if (sortOrder != null && sortOrder.equals("asc")) {
@@ -55,6 +59,7 @@ public class ImplUserService implements UserService {
 
 
     @Override
+    @CacheEvict(cacheNames = "users", allEntries = true)
     public UserResponseTo save(@Valid UserRequestTo requestTo) {
         User userToSave = userMapper.toUser(requestTo);
         if (userDAO.existsByLogin(requestTo.getLogin())) {
@@ -64,6 +69,8 @@ public class ImplUserService implements UserService {
     }
 
     @Override
+    @Caching(evict = { @CacheEvict(cacheNames = "users", key = "#id"),
+            @CacheEvict(cacheNames = "users", allEntries = true) })
     public void delete(Long id) throws DeleteException {
         if (!userDAO.existsById(id)) {
             throw new DeleteException("User not found!", 40004L);
@@ -73,6 +80,7 @@ public class ImplUserService implements UserService {
     }
 
     @Override
+    @CacheEvict(cacheNames = "users", allEntries = true)
     public UserResponseTo update(@Valid UserRequestTo requestTo) throws UpdateException {
         User userToUpdate = userMapper.toUser(requestTo);
         if (!userDAO.existsById(userToUpdate.getId())) {

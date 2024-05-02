@@ -12,6 +12,10 @@ import com.example.restapplication.repository.TagRepository;
 import com.example.restapplication.services.TagService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.CacheConfig;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.cache.annotation.Caching;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -24,6 +28,7 @@ import java.util.Optional;
 
 @Service
 @Validated
+@CacheConfig(cacheNames = "tagsCache")
 public class ImplTagService implements TagService {
 
     @Autowired
@@ -35,12 +40,14 @@ public class ImplTagService implements TagService {
     @Autowired
     TagListMapper tagListMapper;
     @Override
+    @Cacheable(cacheNames = "tags", key = "#id", unless = "#result == null")
     public TagResponseTo getById(Long id) throws NotFoundException {
         Optional<Tag> tag = tagDAO.findById(id);
         return tag.map(value -> tagMapper.toTagResponse(value)).orElseThrow(() -> new NotFoundException("Tag not found", 40004L));
     }
 
     @Override
+    @Cacheable(cacheNames = "tags")
     public List<TagResponseTo> getAll(Integer pageNumber, Integer pageSize, String sortBy, String sortOrder) {
         Pageable pageable;
         if (sortOrder != null && sortOrder.equals("asc")) {
@@ -53,12 +60,15 @@ public class ImplTagService implements TagService {
     }
 
     @Override
+    @CacheEvict(cacheNames = "tags", allEntries = true)
     public TagResponseTo save(@Valid TagRequestTo requestTo) {
         Tag tagToSave = tagMapper.toTag(requestTo);
         return tagMapper.toTagResponse(tagDAO.save(tagToSave));
     }
 
     @Override
+    @Caching(evict = { @CacheEvict(cacheNames = "tags", key = "#id"),
+            @CacheEvict(cacheNames = "tags", allEntries = true) })
     public void delete(Long id) throws DeleteException {
         if (!tagDAO.existsById(id)) {
             throw new DeleteException("Tag not found!", 40004L);
@@ -68,6 +78,7 @@ public class ImplTagService implements TagService {
     }
 
     @Override
+    @CacheEvict(cacheNames = "tags", allEntries = true)
     public TagResponseTo update(@Valid TagRequestTo requestTo) throws UpdateException {
         Tag tagToUpdate = tagMapper.toTag(requestTo);
         if(!tagDAO.existsById(tagToUpdate.getId())) {

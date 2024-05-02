@@ -5,7 +5,7 @@ using REST.Discussion.Models.DTOs.Response;
 using REST.Discussion.Models.Entities;
 using REST.Discussion.Repositories.Interfaces;
 using REST.Discussion.Services.Interfaces;
-using Exceptions_ValidationException = REST.Discussion.Exceptions.ValidationException;
+using Exceptions_ValidationException = REST.Discussion.Utilities.Exceptions.ValidationException;
 
 namespace REST.Discussion.Services.Implementations;
 

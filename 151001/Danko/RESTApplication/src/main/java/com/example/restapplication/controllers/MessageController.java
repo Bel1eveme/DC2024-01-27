@@ -48,12 +48,12 @@ public class MessageController {
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> delete(@PathVariable Long id) throws NotFoundException {
+    public ResponseEntity<MessageResponseTo> delete(@PathVariable Long id) throws NotFoundException {
         MessageRequestTo messageRequestTo = new MessageRequestTo();
         messageRequestTo.setId(id);
         messageRequestTo.setMethod("DELETE");
         kafkaSender.sendMessage(messageRequestTo, kafkaTopic_inTopic);
-        return ResponseEntity.status(HttpStatus.NO_CONTENT).body(null);
+        return ResponseEntity.status(HttpStatus.NO_CONTENT).body(listenKafka());
     }
 
     @PostMapping

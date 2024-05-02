@@ -25,6 +25,15 @@ public class CassandraContext
             .WithPort(port)
             .Build();
 
-        _session = cluster.Connect(keyspace);
+        try
+        {
+            _session = cluster.Connect(keyspace);
+        }
+        catch (InvalidQueryException)
+        {
+            _session = cluster.Connect();
+            _session.CreateKeyspace(keyspace);
+            _session.ChangeKeyspace(keyspace);
+        }
     }
 }

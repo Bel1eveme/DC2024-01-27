@@ -12,6 +12,10 @@ import by.bsuir.publicator.util.converter.comment.CommentConverter;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.CacheConfig;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.cache.annotation.Caching;
 import org.springframework.http.*;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
@@ -25,6 +29,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 
 @Service
+@CacheConfig(cacheNames = "editorsCache")
 public class CommentService implements ICommentService {
 
     private final CommentProducer commentProducer;
@@ -38,6 +43,7 @@ public class CommentService implements ICommentService {
         this.commentConverter = commentConverter;
     }
     @Override
+    @Cacheable(cacheNames = "comments")
     public List<CommentResponseTo> getComments() {
         RestTemplate restTemplate = new RestTemplate();
         HttpHeaders httpHeaders = new HttpHeaders();
@@ -55,18 +61,23 @@ public class CommentService implements ICommentService {
         return new CommentAddResponseTo(commentResponseTo.getId(), commentResponseTo.getIssueId(), commentResponseTo.getContent(), "PENDING");
     }
 
+
     @Override
+    @Caching(evict = { @CacheEvict(cacheNames = "comments", key = "#id"),
+            @CacheEvict(cacheNames = "comments", allEntries = true) })
     public void deleteComment(BigInteger id) throws EntityNotFoundException, InterruptedException {
         commentProducer.sendRequest("DELETE", id.toString());
     }
 
     @Override
+    @CacheEvict(cacheNames = "comments", allEntries = true)
     public CommentResponseTo updateComment(CommentRequestTo comment) throws EntityNotFoundException, JsonProcessingException, InterruptedException {
         ObjectMapper objectMapper = new ObjectMapper();
         return commentProducer.sendRequest("PUT", objectMapper.writeValueAsString(comment));
     }
 
     @Override
+    @Cacheable(cacheNames = "comments", key = "#id", unless = "#result == null")
     public CommentResponseTo getCommentById(BigInteger id) throws EntityNotFoundException, ExecutionException, InterruptedException {
         return commentProducer.sendRequest("GET", id.toString());
     }

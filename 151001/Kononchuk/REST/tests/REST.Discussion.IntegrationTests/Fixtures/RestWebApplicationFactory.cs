@@ -34,7 +34,7 @@ public class RestWebApplicationFactory : WebApplicationFactory<Program>, IAsyncL
 
             if (descriptor != null) services.Remove(descriptor);
 
-            services.AddScoped<CassandraContext>(_ =>
+            services.AddSingleton<CassandraContext>(_ =>
                 new CassandraContext(_dbContainer.Hostname,
                     "distcomp", _dbContainer.GetMappedPublicPort(9042)));
         });
@@ -61,9 +61,7 @@ public class RestWebApplicationFactory : WebApplicationFactory<Program>, IAsyncL
             .WithPort(_dbContainer.GetMappedPublicPort(9042))
             .Build();
         var session = await cluster.ConnectAsync();
-        session.Execute("create keyspace distcomp with replication = {'class': 'SimpleStrategy', 'replication_factor': 1};");
-        
-        
+  
         IStatement statement = new SimpleStatement("""
                                                                 create table distcomp.tblnote
                                                                 (

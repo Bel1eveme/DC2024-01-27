@@ -4,14 +4,14 @@ using FluentValidation;
 using FluentValidation.Results;
 using JetBrains.Annotations;
 using Moq;
-using REST.Discussion.Exceptions;
 using REST.Discussion.Models.DTOs.Request;
 using REST.Discussion.Models.DTOs.Response;
 using REST.Discussion.Models.Entities;
 using REST.Discussion.Repositories.Interfaces;
 using REST.Discussion.Services.Implementations;
 using REST.Discussion.Services.Interfaces;
-using ValidationException = REST.Discussion.Exceptions.ValidationException;
+using REST.Discussion.Utilities.Exceptions;
+using ValidationException = REST.Discussion.Utilities.Exceptions.ValidationException;
 
 
 namespace REST.Discussion.UnitTests.Services.Implementations;

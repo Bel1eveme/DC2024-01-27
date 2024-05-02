@@ -45,11 +45,10 @@ public class CommentProducer {
 
         kafkaResponseListener.setLatchAndResponse(latch, response);
 
-        if (latch.await(1, TimeUnit.SECONDS)) { // Подождать до 10 секунд
+        if (latch.await(10, TimeUnit.SECONDS)) {
 
             return kafkaResponseListener.getResponse();
         } else {
-            // Если ответ не получен в течение указанного времени, можно обработать эту ситуацию
             throw new RuntimeException("Response timeout");
         }
     }

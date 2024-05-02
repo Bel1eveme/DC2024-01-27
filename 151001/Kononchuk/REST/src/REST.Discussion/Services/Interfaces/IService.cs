@@ -1,5 +1,5 @@
-﻿using REST.Discussion.Exceptions;
-using REST.Discussion.Repositories.Interfaces;
+﻿using REST.Discussion.Repositories.Interfaces;
+using REST.Discussion.Utilities.Exceptions;
 
 namespace REST.Discussion.Services.Interfaces;
 

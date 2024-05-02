@@ -1,6 +1,5 @@
 package com.example.discussion.controllers;
 
-import com.example.discussion.KafkaSender;
 import com.example.discussion.dto.MessageRequestTo;
 import com.example.discussion.dto.MessageResponseTo;
 import com.example.discussion.services.MessageService;
@@ -58,7 +57,7 @@ public class MessageController {
     @DeleteMapping("/{id}")
     public MessageResponseTo delete(@PathVariable Long id) {
         messageService.delete(id);
-        return new MessageResponseTo();
+        return new MessageResponseTo(null, null, null);
     }
 
     @PostMapping

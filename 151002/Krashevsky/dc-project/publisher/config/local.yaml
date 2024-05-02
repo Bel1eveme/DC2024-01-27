@@ -1,0 +1,17 @@
+port: 24111
+
+db:
+  username: "postgres"
+  password: "postgres"
+  host:     "host.docker.internal"
+  port:     "5432"
+  dbname:   "postgres"
+  sslmode:  "disable"
+
+kafka:
+  host: "host.docker.internal"
+  port: "9092"
+
+redis:
+  host: "host.docker.internal"
+  port: "6379"

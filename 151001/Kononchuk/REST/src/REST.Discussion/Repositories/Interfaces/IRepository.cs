@@ -1,4 +1,4 @@
-﻿using REST.Discussion.Exceptions;
+﻿using REST.Discussion.Utilities.Exceptions;
 
 namespace REST.Discussion.Repositories.Interfaces;
 

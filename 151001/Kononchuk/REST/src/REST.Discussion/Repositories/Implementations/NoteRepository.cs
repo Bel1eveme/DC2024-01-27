@@ -1,8 +1,8 @@
 ﻿using Cassandra.Mapping;
 using REST.Discussion.Data;
-using REST.Discussion.Exceptions;
 using REST.Discussion.Models.Entities;
 using REST.Discussion.Repositories.Interfaces;
+using REST.Discussion.Utilities.Exceptions;
 
 namespace REST.Discussion.Repositories.Implementations;
 

@@ -20,7 +20,7 @@ public class KafkaProducerConfig {
     @Bean
     public ProducerFactory<String, MessageRequestTo> producerFactory() {
         Map<String, Object> configProps = new HashMap<>();
-        configProps.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, "localhost:9092");
+        configProps.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, "localhost:9093");
         configProps.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, StringSerializer.class);
         configProps.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, MessageRequestToDeserializer.class);
         configProps.put(ProducerConfig.PARTITIONER_CLASS_CONFIG, KafkaPartitioner.class);
